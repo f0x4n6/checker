@@ -19,7 +19,7 @@ const (
 var Timeout = time.Second * 30
 
 // UserAgent to use (general)
-var UserAgent = "check"
+var UserAgent = "checker"
 
 // Result of API call.
 type Result struct {

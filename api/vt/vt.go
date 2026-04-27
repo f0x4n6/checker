@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/VirusTotal/vt-go"
-	"go.foxforensics.dev/check/api"
+	"go.foxforensics.dev/checker/api"
 )
 
 // Key to use for VirusTotal

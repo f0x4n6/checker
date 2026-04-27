@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"go.foxforensics.dev/check/api"
+	"go.foxforensics.dev/checker/api"
 )
 
 const v3 = "https://haveibeenpwned.com/api/v3"

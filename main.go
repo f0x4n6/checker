@@ -2,7 +2,7 @@
 //
 // Usage:
 //
-//	check <FILE|MAIL|URL|DNS|IP> value ...
+//	checker <FILE|MAIL|URL|DNS|IP> value ...
 //
 // The arguments are:
 //
@@ -19,30 +19,30 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"go.foxforensics.dev/check/api"
-	"go.foxforensics.dev/check/api/hibp"
-	"go.foxforensics.dev/check/api/vt"
+	"go.foxforensics.dev/checker/api"
+	"go.foxforensics.dev/checker/api/hibp"
+	"go.foxforensics.dev/checker/api/vt"
 )
 
 func main() {
 	if len(os.Args) < 3 || os.Args[1] == "--help" {
-		_, _ = fmt.Fprintln(os.Stderr, "usage: check <FILE|MAIL|URL|DNS|IP> value ...")
+		_, _ = fmt.Fprintln(os.Stderr, "usage: checker <FILE|MAIL|URL|DNS|IP> value ...")
 		os.Exit(2)
 	}
 
-	hibp.Key = os.Getenv("CHECK_HIBP_KEY")
-	vt.Key = os.Getenv("CHECK_VT_KEY")
+	hibp.Key = os.Getenv("CHECKER_HIBP_KEY")
+	vt.Key = os.Getenv("CHECKER_VT_KEY")
 
 	t := strings.ToLower(os.Args[1])
 
 	if t == "mail" {
 		if len(hibp.Key) == 0 {
-			_, _ = fmt.Fprintf(os.Stderr, "[!] %s\n", color.RedString("CHECK_HIBP_KEY not set"))
+			_, _ = fmt.Fprintf(os.Stderr, "[!] %s\n", color.RedString("CHECKER_HIBP_KEY not set"))
 			os.Exit(1)
 		}
 	} else {
 		if len(vt.Key) == 0 {
-			_, _ = fmt.Fprintf(os.Stderr, "[!] %s\n", color.RedString("CHECK_VT_KEY not set"))
+			_, _ = fmt.Fprintf(os.Stderr, "[!] %s\n", color.RedString("CHECKER_VT_KEY not set"))
 			os.Exit(1)
 		}
 	}
