@@ -1,3 +1,4 @@
+// Package hibp implements the HaveIBeenPwned API.
 package hibp
 
 import (
@@ -11,7 +12,10 @@ import (
 	"go.foxforensics.dev/check/api"
 )
 
-const api3 = "https://haveibeenpwned.com/api/v3"
+const v3 = "https://haveibeenpwned.com/api/v3"
+
+// Key to use for HaveIBeenPwned
+var Key string
 
 type breach struct {
 	Title        string `json:"Title,omitempty"`
@@ -20,8 +24,9 @@ type breach struct {
 	IsFabricated bool   `json:"IsFabricated,omitempty"`
 }
 
-func CheckMail(mail, key string) (*api.Result, error) {
-	return request(fmt.Sprintf("%s/breachedaccount/%s?truncateResponse=false", api3, url.QueryEscape(mail)), key)
+// CheckMail returns if the mail adresse has been compromised.
+func CheckMail(mail string) (*api.Result, error) {
+	return request(fmt.Sprintf("%s/breachedaccount/%s?truncateResponse=false", v3, url.QueryEscape(mail)))
 }
 
 func parseVerdict(br []breach, res *api.Result) {
@@ -46,12 +51,12 @@ func parseDetails(br []breach, res *api.Result) {
 	}
 }
 
-func getBreaches(resp *http.Response) ([]breach, error) {
+func getBreaches(r *http.Response) ([]breach, error) {
 	var br []breach
 
-	b, err := io.ReadAll(resp.Body)
+	b, err := io.ReadAll(r.Body)
 
-	_ = resp.Body.Close()
+	_ = r.Body.Close()
 
 	if err != nil {
 		return nil, err
@@ -60,7 +65,7 @@ func getBreaches(resp *http.Response) ([]breach, error) {
 	return br, json.Unmarshal(b, &br)
 }
 
-func request(url, key string) (*api.Result, error) {
+func request(url string) (*api.Result, error) {
 	res := &api.Result{Details: make(map[string]string)}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -70,7 +75,7 @@ func request(url, key string) (*api.Result, error) {
 	}
 
 	req.Header.Add("user-agent", api.UserAgent)
-	req.Header.Add("hibp-api-key", key)
+	req.Header.Add("hibp-api-key", Key)
 
 	resp, err := api.Client().Do(req)
 

@@ -1,9 +1,14 @@
+// Package vt implements the VirusTotal API.
 package vt
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
+	"log"
 	"maps"
 	"net/url"
+	"os"
 	"slices"
 	"strings"
 
@@ -11,29 +16,35 @@ import (
 	"go.foxforensics.dev/check/api"
 )
 
-var badCategories = []string{
-	"malicious",
-	"suspicious",
+// Key to use for VirusTotal
+var Key string
+
+// CheckIp returns if the IP is malicious.
+func CheckIp(ip string) (*api.Result, error) {
+	return request(vt.URL("ip_addresses/%s", ip))
 }
 
-func CheckIp(ip, key string) (*api.Result, error) {
-	return request(vt.URL("ip_addresses/%s", ip), key)
+// CheckDns returns if the domain is malicious.
+func CheckDns(url string) (*api.Result, error) {
+	return request(vt.URL("domains/%s", url))
 }
 
-func CheckUrl(url, key string) (*api.Result, error) {
-	return request(vt.URL("urls/%s", url), key)
+// CheckUrl returns if the URL is malicious.
+func CheckUrl(url string) (*api.Result, error) {
+	return request(vt.URL("urls/%s", url))
 }
 
-func CheckDomain(url, key string) (*api.Result, error) {
-	return request(vt.URL("domains/%s", url), key)
-}
-
-func CheckFileHash(sum, key string) (*api.Result, error) {
-	return request(vt.URL("files/%s", sum), key)
+// CheckFile returns if the file is malicious.
+func CheckFile(file string) (*api.Result, error) {
+	return request(vt.URL("files/%s", hashFile(file)))
 }
 
 func parseVerdict(obj *vt.Object, res *api.Result) {
-	res.Stats.Bad = countStats(obj, badCategories)
+	res.Stats.Bad = countStats(obj, []string{
+		"malicious",
+		"suspicious",
+	})
+
 	res.Stats.All = countStats(obj, []string{
 		"malicious",
 		"suspicious",
@@ -60,13 +71,13 @@ func parseVerdict(obj *vt.Object, res *api.Result) {
 }
 
 func parseDetails(obj *vt.Object, res *api.Result) {
-	lar, err := obj.Get("last_analysis_results")
+	aly, err := obj.Get("last_analysis_results")
 
 	if err != nil {
 		return
 	}
 
-	m := lar.(map[string]any)
+	m := aly.(map[string]any)
 
 	for _, k := range slices.Sorted(maps.Keys(m)) {
 		v := m[k].(map[string]any)
@@ -79,18 +90,38 @@ func parseDetails(obj *vt.Object, res *api.Result) {
 	}
 }
 
-func countStats(obj *vt.Object, lst []string) (n int) {
-	for _, k := range lst {
+func countStats(obj *vt.Object, l []string) (n int) {
+	for _, k := range l {
 		v, _ := obj.GetInt64(fmt.Sprintf("last_analysis_stats.%s", k))
 		n += int(v)
 	}
 	return
 }
 
-func request(url *url.URL, key string) (*api.Result, error) {
+func hashFile(path string) string {
+	f, err := os.Open(path)
+
+	if err != nil {
+		log.Fatalf("hashFile: %v", err)
+	}
+
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	h := sha256.New()
+
+	if _, err := io.Copy(h, f); err != nil {
+		log.Fatalf("hashFile: %v", err)
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func request(url *url.URL) (*api.Result, error) {
 	res := &api.Result{Details: make(map[string]string)}
 
-	vtc := vt.NewClient(key, vt.WithHTTPClient(api.Client()))
+	vtc := vt.NewClient(Key, vt.WithHTTPClient(api.Client()))
 
 	obj, err := vtc.GetObject(url)
 

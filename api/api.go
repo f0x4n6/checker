@@ -1,3 +1,4 @@
+// Package api provides a general API result.
 package api
 
 import (
@@ -14,12 +15,13 @@ const (
 	Suspicious = "suspicious"
 )
 
-var (
-	Idle      = 0
-	Timeout   = time.Second * 30
-	UserAgent = "fox forensics check"
-)
+// Timeout to use (general)
+var Timeout = time.Second * 30
 
+// UserAgent to use (general)
+var UserAgent = "check"
+
+// Result of API call.
 type Result struct {
 	Verdict string            `json:"verdict,omitempty"`
 	Details map[string]string `json:"details,omitempty"`
@@ -29,17 +31,19 @@ type Result struct {
 	} `json:"stats,omitempty"`
 }
 
+// ToJSON returns the result as JSON object.
 func (res *Result) ToJSON() string {
 	b, _ := json.MarshalIndent(res, "", "  ")
 	return string(b)
 }
 
+// ToJSONL returns the result as JSON lines.
 func (res *Result) ToJSONL() string {
 	b, _ := json.Marshal(res)
 	return string(b)
 }
 
-// Client HTTP client
+// Client returns the default HTTP client.
 func Client() *http.Client {
 	return &http.Client{
 		Timeout: Timeout,
@@ -47,7 +51,7 @@ func Client() *http.Client {
 			Proxy:               http.ProxyFromEnvironment,
 			IdleConnTimeout:     Timeout,
 			TLSHandshakeTimeout: Timeout,
-			MaxIdleConnsPerHost: Idle,
+			MaxIdleConnsPerHost: 0,
 		},
 	}
 }
