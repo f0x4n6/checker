@@ -10,9 +10,18 @@ go install go.foxforensics.dev/checker@latest
 $ checker <FILE|MAIL|URL|DNS|IP> value ...
 ```
 
-## Environment
-* `CHECKER_VT_KEY` must be set to check `FILE`, `URL`, `DNS`, `IP`. 
-* `CHECKER_HIBP_KEY` must be set to check `MAIL`.
+## APIs
+
+### VirusTotal
+> The environment variable `CHECKER_VT_KEY` must be set.
+
+* Check if an IP / URL / domain name has been used in malicious activities
+* Check if a file is malicious by its hash
+
+### HaveIBeenPwned
+> The environment variable `CHECKER_HIBP_KEY` must be set.
+
+* Check if an mail address has been breached
 
 ## License
 Released under the [MIT License](LICENSE.md).
