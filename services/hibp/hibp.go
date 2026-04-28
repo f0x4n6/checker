@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"go.foxforensics.dev/checker/api"
+	"go.foxforensics.dev/checker/services"
 )
 
 const v3 = "https://haveibeenpwned.com/api/v3"
@@ -25,11 +25,11 @@ type breach struct {
 }
 
 // CheckMail returns if the mail adresse has been compromised.
-func CheckMail(mail string) (*api.Result, error) {
+func CheckMail(mail string) (*services.Result, error) {
 	return request(fmt.Sprintf("%s/breachedaccount/%s?truncateResponse=false", v3, url.QueryEscape(mail)))
 }
 
-func parseVerdict(br []breach, res *api.Result) {
+func parseVerdict(br []breach, res *services.Result) {
 	for _, v := range br {
 		res.Stats.All += 1
 
@@ -39,13 +39,13 @@ func parseVerdict(br []breach, res *api.Result) {
 	}
 
 	if res.Stats.Bad > 0 {
-		res.Verdict = api.Breached
+		res.Verdict = services.Breached
 	} else {
-		res.Verdict = api.Clean
+		res.Verdict = services.Clean
 	}
 }
 
-func parseDetails(br []breach, res *api.Result) {
+func parseDetails(br []breach, res *services.Result) {
 	for _, v := range br {
 		res.Details[v.Title] = v.BreachDate
 	}
@@ -65,8 +65,8 @@ func getBreaches(r *http.Response) ([]breach, error) {
 	return br, json.Unmarshal(b, &br)
 }
 
-func request(url string) (*api.Result, error) {
-	res := &api.Result{Details: make(map[string]string)}
+func request(url string) (*services.Result, error) {
+	res := &services.Result{Details: make(map[string]string)}
 
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -74,10 +74,10 @@ func request(url string) (*api.Result, error) {
 		return nil, err
 	}
 
-	req.Header.Add("user-agent", api.UserAgent)
+	req.Header.Add("user-agent", services.UserAgent)
 	req.Header.Add("hibp-api-key", Key)
 
-	resp, err := api.Client().Do(req)
+	resp, err := services.Client().Do(req)
 
 	if err != nil {
 		return nil, err

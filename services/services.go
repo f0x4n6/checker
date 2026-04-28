@@ -1,5 +1,5 @@
-// Package api provides a general API result.
-package api
+// Package services provides a general service result.
+package services
 
 import (
 	"encoding/json"

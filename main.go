@@ -19,9 +19,9 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"go.foxforensics.dev/checker/api"
-	"go.foxforensics.dev/checker/api/hibp"
-	"go.foxforensics.dev/checker/api/vt"
+	"go.foxforensics.dev/checker/services"
+	"go.foxforensics.dev/checker/services/hibp"
+	"go.foxforensics.dev/checker/services/vt"
 )
 
 func main() {
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	for _, v := range os.Args[2:] {
-		var res *api.Result
+		var res *services.Result
 		var err error
 
 		switch t {
@@ -72,11 +72,11 @@ func main() {
 		}
 
 		switch res.Verdict {
-		case api.Suspicious, api.Breached:
+		case services.Suspicious, services.Breached:
 			_, _ = fmt.Printf("[!] %s\n", color.RedString(v))
-		case api.Unrated, api.Unknown:
+		case services.Unrated, services.Unknown:
 			_, _ = fmt.Printf("[?] %s\n", color.YellowString(v))
-		case api.Clean:
+		case services.Clean:
 			_, _ = fmt.Printf("[*] %s\n", color.GreenString(v))
 		default:
 			_, _ = fmt.Printf("[!] %s  %s\n", color.RedString(v), color.New(color.BgRed, color.Bold).Sprintf(" %s ", res.Verdict))

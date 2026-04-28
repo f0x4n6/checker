@@ -13,33 +13,33 @@ import (
 	"strings"
 
 	"github.com/VirusTotal/vt-go"
-	"go.foxforensics.dev/checker/api"
+	"go.foxforensics.dev/checker/services"
 )
 
 // Key to use for VirusTotal
 var Key string
 
 // CheckIp returns if the IP is malicious.
-func CheckIp(ip string) (*api.Result, error) {
+func CheckIp(ip string) (*services.Result, error) {
 	return request(vt.URL("ip_addresses/%s", ip))
 }
 
 // CheckDns returns if the domain is malicious.
-func CheckDns(url string) (*api.Result, error) {
+func CheckDns(url string) (*services.Result, error) {
 	return request(vt.URL("domains/%s", url))
 }
 
 // CheckUrl returns if the URL is malicious.
-func CheckUrl(url string) (*api.Result, error) {
+func CheckUrl(url string) (*services.Result, error) {
 	return request(vt.URL("urls/%s", url))
 }
 
 // CheckFile returns if the file is malicious.
-func CheckFile(file string) (*api.Result, error) {
+func CheckFile(file string) (*services.Result, error) {
 	return request(vt.URL("files/%s", hashFile(file)))
 }
 
-func parseVerdict(obj *vt.Object, res *api.Result) {
+func parseVerdict(obj *vt.Object, res *services.Result) {
 	res.Stats.Bad = countStats(obj, []string{
 		"malicious",
 		"suspicious",
@@ -61,16 +61,16 @@ func parseVerdict(obj *vt.Object, res *api.Result) {
 	if len(res.Verdict) == 0 {
 		switch {
 		case res.Stats.Bad > 0:
-			res.Verdict = api.Suspicious
+			res.Verdict = services.Suspicious
 		case res.Stats.All > 0:
-			res.Verdict = api.Clean
+			res.Verdict = services.Clean
 		default:
-			res.Verdict = api.Unrated
+			res.Verdict = services.Unrated
 		}
 	}
 }
 
-func parseDetails(obj *vt.Object, res *api.Result) {
+func parseDetails(obj *vt.Object, res *services.Result) {
 	aly, err := obj.Get("last_analysis_results")
 
 	if err != nil {
@@ -118,16 +118,16 @@ func hashFile(path string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func request(url *url.URL) (*api.Result, error) {
-	res := &api.Result{Details: make(map[string]string)}
+func request(url *url.URL) (*services.Result, error) {
+	res := &services.Result{Details: make(map[string]string)}
 
-	vtc := vt.NewClient(Key, vt.WithHTTPClient(api.Client()))
+	vtc := vt.NewClient(Key, vt.WithHTTPClient(services.Client()))
 
 	obj, err := vtc.GetObject(url)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			res.Verdict = api.Unknown
+			res.Verdict = services.Unknown
 			return res, nil
 		}
 
